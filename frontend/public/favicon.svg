@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <!-- BAYYAN — Mark · الختم ("The Seal"), app-icon chip variant.
+       Green tatreez diamond holding the Arabic ن (Noon) with a gold dot. -->
+  <rect x="0.5" y="0.5" width="47" height="47" rx="13" fill="#1F5A43"/>
+  <rect x="12.6" y="12.6" width="22.8" height="22.8" rx="5" transform="rotate(45 24 24)"
+        fill="none" stroke="#BE9442" stroke-width="0.85" opacity="0.65"/>
+  <path d="M16 22 C 16 29, 19.5 31, 24 31 C 28.5 31, 32 29, 32 22"
+        fill="none" stroke="#FFFCF5" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 13.9 L26.7 16.6 L24 19.3 L21.3 16.6 Z" fill="#BE9442"/>
+</svg>

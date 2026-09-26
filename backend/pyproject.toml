@@ -1,0 +1,46 @@
+[project]
+name = "bayyan-backend"
+version = "0.1.0"
+description = "AI-powered tax preparation platform for Jordanian taxpayers"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
+    "bcrypt<4.1",
+    "fastapi>=0.135.3",
+    "minio>=7.2.20",
+    "passlib[bcrypt]>=1.7.4",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.13.1",
+    "python-jose[cryptography]>=3.5.0",
+    "python-multipart>=0.0.24",
+    "sqlalchemy[asyncio]>=2.0.49",
+    "uvicorn[standard]>=0.43.0",
+    # ML / AI stack — extraction, RAG, advisor
+    "transformers>=4.49",
+    "sentence-transformers>=3.0",
+    "chromadb>=0.5",
+    "torch>=2.4",
+    "Pillow>=10.4",
+    "numpy>=1.26",
+    "rank-bm25>=0.2",
+    "anthropic>=0.40",
+    # Knowledge base ingestion (PDF text + OCR fallback)
+    "pdfplumber>=0.11",
+    "pypdfium2>=4.30",
+    "pytesseract>=0.3.13",
+    "langgraph>=1.2.0",
+    "openai>=2.36.0",
+    "google-genai>=1.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.22.1",
+    "httpx>=0.28.1",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.3.0",
+]

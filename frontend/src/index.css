@@ -1,0 +1,340 @@
+@import "tailwindcss";
+
+/* ============================================================
+   BAYYAN — بيان · Design tokens + base
+   Heritage Jordanian tax platform. Light-primary, dark-supported,
+   bilingual (EN/Latin · AR/RTL). Concept: clarity assembled from
+   mosaic tiles. Palette: parchment sand · olive-pine green ·
+   Petra terracotta · antique gold.
+   ============================================================ */
+
+/* ---- Type families (loaded via Google Fonts in index.html) ---- */
+:root {
+  --font-latin-ui: "IBM Plex Sans", system-ui, sans-serif;
+  --font-latin-display: "IBM Plex Serif", Georgia, serif;
+  --font-ar-ui: "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif;
+  --font-ar-display: "Reem Kufi", "IBM Plex Sans Arabic", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Wordmark fonts — special, calligraphic. Logo use only. */
+  --font-wm-en: "Marcellus", Georgia, serif;
+  --font-wm-ar: "Aref Ruqaa", "Reem Kufi", serif;
+
+  /* Active families — swapped by [dir] below */
+  --font-ui: var(--font-latin-ui);
+  --font-display: var(--font-latin-display);
+
+  /* Heritage ornament intensity (locked) */
+  --net-mult: 0.6;
+}
+
+/* Expose tokens to Tailwind v4 utilities (text-ink, bg-paper, etc.) */
+@theme {
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-serif: "IBM Plex Serif", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-sand: var(--sand);
+  --color-sand-deep: var(--sand-deep);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-green: var(--green);
+  --color-green-deep: var(--green-deep);
+  --color-green-tint: var(--green-tint);
+  --color-green-tint2: var(--green-tint2);
+  --color-clay: var(--clay);
+  --color-clay-tint: var(--clay-tint);
+  --color-gold: var(--gold);
+  --color-gold-tint: var(--gold-tint);
+  --color-positive: var(--positive);
+  --color-attention: var(--attention);
+  --color-danger: var(--danger);
+}
+
+/* ---- Wordmark (logo lettering) ---- */
+.wordmark { font-family: var(--font-wm-en); font-weight: 400; letter-spacing: .015em; }
+[dir="rtl"] .wordmark { font-family: var(--font-wm-ar); font-weight: 700; letter-spacing: 0; }
+
+[dir="rtl"] {
+  --font-ui: var(--font-ar-ui);
+  --font-display: var(--font-ar-display);
+}
+
+/* ============================================================
+   LIGHT THEME (default)
+   ============================================================ */
+:root, [data-theme="light"] {
+  --sand:        #F4EDDF;   /* page background — warm parchment   */
+  --sand-deep:   #ECE2CE;   /* recessed / alt sections            */
+  --paper:       #FFFCF5;   /* cards / surfaces — warm white      */
+  --paper-2:     #FBF6EC;   /* subtle raised tint                 */
+
+  --ink:         #1E1B14;   /* primary text — warm near-black     */
+  --ink-soft:    #6C6553;   /* secondary text — warm taupe        */
+  --ink-faint:   #97917F;   /* tertiary / captions                */
+  --line:        #E2D6BF;   /* hairlines / borders — sandstone    */
+  --line-strong: #D2C3A4;
+
+  --green:       #1F5A43;   /* PRIMARY — deep olive-pine          */
+  --green-700:   #1A4C36;
+  --green-deep:  #16442F;   /* primary hover / pressed            */
+  --green-tint:  #E4EDE4;   /* primary soft fill                  */
+  --green-tint2: #D5E3D8;
+
+  --clay:        #B05E37;   /* heritage accent — Petra terracotta */
+  --clay-tint:   #F3E2D6;
+  --gold:        #BE9442;   /* fine accent — antique gold         */
+  --gold-tint:   #F2E8CF;
+
+  --positive:    #1F7A52;   /* refund / good                      */
+  --attention:   #B5792A;   /* warning / action                   */
+  --danger:      #A93B2C;   /* error                              */
+
+  --shadow-sm: 0 1px 2px rgba(40,30,10,.06), 0 1px 3px rgba(40,30,10,.05);
+  --shadow-md: 0 4px 14px rgba(50,38,14,.08), 0 2px 6px rgba(50,38,14,.05);
+  --shadow-lg: 0 18px 48px rgba(50,38,14,.13), 0 6px 16px rgba(50,38,14,.07);
+  --shadow-glow: 0 14px 40px rgba(31,90,67,.18);
+
+  --tile-ink: rgba(31,90,67,.5);   /* tatreez net stroke */
+  --tile-clay: rgba(176,94,55,.32); /* heritage terracotta accent */
+  --tile-gold: rgba(190,148,66,.6); /* heritage gold cross-stitch */
+}
+
+/* ============================================================
+   DARK THEME — deep warm green-black, parchment ink, glowing gold
+   ============================================================ */
+:root[data-theme="dark"], [data-theme="dark"] {
+  --sand:        #0F1310;
+  --sand-deep:   #0B0E0B;
+  --paper:       #171D17;
+  --paper-2:     #1D241C;
+
+  --ink:         #F0EADB;
+  --ink-soft:    #ADA791;
+  --ink-faint:   #7E7A6A;
+  --line:        #2A3128;
+  --line-strong: #3A4337;
+
+  --green:       #5BAE84;
+  --green-700:   #6FC096;
+  --green-deep:  #4E9C74;
+  --green-tint:  #18241D;
+  --green-tint2: #1F3127;
+
+  --clay:        #D2865C;
+  --clay-tint:   #2A1F19;
+  --gold:        #D8B25E;
+  --gold-tint:   #2A2415;
+
+  --positive:    #5BAE84;
+  --attention:   #D8B25E;
+  --danger:      #D87A66;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-md: 0 6px 20px rgba(0,0,0,.45);
+  --shadow-lg: 0 20px 54px rgba(0,0,0,.6);
+  --shadow-glow: 0 16px 46px rgba(91,174,132,.20);
+
+  --tile-ink: rgba(91,174,132,.42);
+  --tile-clay: rgba(210,134,92,.3);
+  --tile-gold: rgba(216,178,94,.5);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+section[id] { scroll-margin-top: 5rem; }
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  background-color: var(--sand);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.55;
+}
+::selection { background: var(--green-tint2); color: var(--ink); }
+h1,h2,h3,h4 { margin: 0; font-weight: 600; line-height: 1.1; letter-spacing: -.01em; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+img { display: block; max-width: 100%; }
+
+/* RTL display headings: Reem Kufi reads better a touch looser */
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3 { letter-spacing: 0; line-height: 1.25; }
+
+/* ---- Display / serif headings ---- */
+.display { font-family: var(--font-display); font-weight: 600; letter-spacing: -.02em; }
+[dir="rtl"] .display { font-weight: 500; letter-spacing: 0; }
+
+/* ---- Type scale ---- */
+.t-eyebrow {
+  font-size: 12px; font-weight: 600; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--green);
+}
+[dir="rtl"] .t-eyebrow { letter-spacing: .06em; }
+.t-display  { font-size: clamp(40px, 6vw, 76px); line-height: 1.04; }
+.t-h1       { font-size: clamp(30px, 4vw, 48px); }
+.t-h2       { font-size: clamp(24px, 3vw, 34px); }
+.t-h3       { font-size: 20px; }
+.t-lead     { font-size: clamp(17px, 1.5vw, 20px); color: var(--ink-soft); line-height: 1.6; }
+.t-body     { font-size: 15.5px; color: var(--ink-soft); line-height: 1.65; }
+.t-small    { font-size: 13px; color: var(--ink-soft); }
+.t-mono     { font-family: var(--font-mono); font-feature-settings: "tnum"; }
+.num        { font-family: var(--font-mono); font-feature-settings: "tnum"; letter-spacing: -.01em; }
+
+/* ============================================================
+   LAYOUT HELPERS
+   ============================================================ */
+.wrap { width: 100%; max-width: 1180px; margin-inline: auto; padding-inline: 28px; }
+.wrap-narrow { max-width: 880px; }
+.wrap-app { max-width: 1280px; }
+.stack > * + * { margin-block-start: var(--gap, 16px); }
+.row { display: flex; align-items: center; gap: 12px; }
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.center { text-align: center; }
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  font-family: var(--font-ui); font-size: 15px; font-weight: 600;
+  padding: 13px 22px; border-radius: 13px; border: 1px solid transparent;
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+  white-space: nowrap; line-height: 1;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+.btn-lg { padding: 16px 28px; font-size: 16px; border-radius: 15px; }
+.btn-sm { padding: 9px 15px; font-size: 13.5px; border-radius: 10px; }
+
+.btn-primary { background: var(--green); color: #FFFCF5; box-shadow: var(--shadow-glow); }
+.btn-primary:hover { background: var(--green-deep); transform: translateY(-1px); }
+[data-theme="dark"] .btn-primary { color: #0B0E0B; }
+
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+.btn-ghost:hover { background: var(--paper-2); border-color: var(--green); color: var(--green); }
+
+.btn-clay { background: var(--clay); color: #FFFCF5; }
+.btn-clay:hover { filter: brightness(.95); transform: translateY(-1px); }
+
+.btn-quiet { background: transparent; color: var(--ink-soft); padding-inline: 8px; }
+.btn-quiet:hover { color: var(--green); }
+
+/* arrow flips in RTL */
+[dir="rtl"] .btn .i-arrow { transform: scaleX(-1); }
+
+/* ============================================================
+   SURFACES
+   ============================================================ */
+.card {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 18px; box-shadow: var(--shadow-sm);
+}
+.card-pad { padding: 26px; }
+.card-hover { transition: transform .2s ease, box-shadow .25s ease, border-color .25s ease; }
+.card-hover:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--line-strong); }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 500;
+  background: var(--paper); border: 1px solid var(--line);
+}
+.pill-green { background: var(--green-tint); border-color: var(--green-tint2); color: var(--green); }
+.dot { width: 7px; height: 7px; border-radius: 999px; background: var(--positive); }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+}
+.chip-green { background: var(--green-tint); color: var(--green); }
+.chip-clay  { background: var(--clay-tint); color: var(--clay); }
+.chip-gold  { background: var(--gold-tint); color: var(--gold); }
+
+.divider { height: 1px; background: var(--line); border: 0; }
+
+/* ============================================================
+   MOSAIC — heritage wash backgrounds
+   ============================================================ */
+.sun-wash {
+  background:
+    radial-gradient(120% 80% at 50% -10%, var(--green-tint) 0%, transparent 55%);
+}
+[data-theme="dark"] .sun-wash {
+  background: radial-gradient(120% 80% at 50% -10%, rgba(91,174,132,.10) 0%, transparent 55%);
+}
+
+/* ============================================================
+   FORM CONTROLS
+   ============================================================ */
+.field { display: block; }
+.field-label {
+  display: block; font-size: 13.5px; font-weight: 600; color: var(--ink);
+  margin-block-end: 8px;
+}
+.input, .select {
+  width: 100%; padding: 13px 15px; border-radius: 12px;
+  background: var(--paper); border: 1px solid var(--line-strong); color: var(--ink);
+  font-size: 15px; transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.input::placeholder { color: var(--ink-faint); }
+.input:focus, .select:focus {
+  outline: none; border-color: var(--green);
+  box-shadow: 0 0 0 4px var(--green-tint);
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+.muted { color: var(--ink-soft); }
+.faint { color: var(--ink-faint); }
+.green { color: var(--green); }
+.clay  { color: var(--clay); }
+.gold  { color: var(--gold); }
+.fill-green { background: var(--green); }
+.fade-up { animation: fadeUp .55s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes fadeUp { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes bayyanPulse { 0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--clay) 55%, transparent); } 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--clay) 0%, transparent); } }
+
+/* ============================================================
+   ANALYSIS STEPPER — run-state motion (Strategic Analysis screen)
+   ============================================================ */
+/* spinning arc on the running node */
+@keyframes plSpin { to { transform: rotate(360deg); } }
+.pl-spin { animation: plSpin .9s linear infinite; }
+
+/* typing dots while a node works */
+.pl-dots { display: inline-flex; gap: 3px; align-items: center; }
+.pl-dots span {
+  width: 5px; height: 5px; border-radius: 999px; background: var(--gold);
+  display: inline-block; animation: plDots 1s ease-in-out infinite;
+}
+.pl-dots span:nth-child(2) { animation-delay: .16s; }
+.pl-dots span:nth-child(3) { animation-delay: .32s; }
+@keyframes plDots { 0%, 100% { opacity: .25; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-2px); } }
+
+/* status pip pulse (Running chip) */
+.pl-pulse { animation: plPulse 1.3s ease-in-out infinite; }
+@keyframes plPulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+/* Hide visible scrollbar but keep wheel/touch scrolling. */
+.hide-scrollbar {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE / old Edge */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;                  /* Chromium / Safari */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

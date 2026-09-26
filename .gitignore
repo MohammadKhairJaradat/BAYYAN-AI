@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+*.db
+*.sqlite
+*.sqlite3
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment files
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# IDE & Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dev launcher state & temporary test outputs
+.devstate.json
+.playwright-mcp/
+.claude/scheduled_tasks.lock
+**/.pytest_cache/
+**/.ruff_cache/
+*.log
+
+# Local QA evidence and generated reports; review selected synthetic fixtures separately
+outputs/
+scratch/
+TEMP_FILE/
+
+# User-supplied raw legal corpus and unapproved candidate extracts.
+# Reviewed, redistributable sources can be promoted to backend/knowledge_base/.
+/Data/
+backend/knowledge_base/staging/*
+!backend/knowledge_base/staging/README.md
+
+# ChromaDB vector store — runtime artifact, rebuilt by ingest_knowledge_base.py
+backend/data/chromadb/*
+!backend/data/chromadb/.gitkeep

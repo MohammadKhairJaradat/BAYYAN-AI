@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "file": "law/demo_claims_audit_jordan_income_tax.md",
+      "title": "BAYYAN claims-audit legal fixture / مصدر اختبار بيان",
+      "type": "law",
+      "status": "demo",
+      "law_year": null,
+      "effective_date": null,
+      "source_url": "",
+      "rights_note": "Team demo fixture; publication rights and legal accuracy require review."
+    },
+    {
+      "file": "guidance/demo_claims_audit_guidance.md",
+      "title": "BAYYAN claims-audit guidance fixture / إرشاد تجريبي",
+      "type": "guidance",
+      "status": "demo",
+      "law_year": null,
+      "effective_date": null,
+      "source_url": "",
+      "rights_note": "Team demo fixture; publication rights and legal accuracy require review."
+    }
+  ]
+}

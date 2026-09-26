@@ -1,0 +1,19 @@
+{
+  "label": "Synthetic illustration, not a tax assessment",
+  "inputs": {
+    "gross_income": 30000,
+    "marital_status": "married",
+    "num_dependents": 2,
+    "claims_dependents_exemption": true,
+    "claim_spouse_expense_exemption": true,
+    "deductions": { "medical": 2000 }
+  },
+  "expected": {
+    "personal_exemption": 9000,
+    "family_exemption": 9000,
+    "expense_exemption": 2000,
+    "total_exemptions": 20000,
+    "taxable_income": 10000,
+    "tax_liability": 750
+  }
+}
