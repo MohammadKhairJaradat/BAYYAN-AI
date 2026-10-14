@@ -1,4 +1,4 @@
-# BAYYAN AI | بيان — Intelligent Jordanian Tax Preparation & Advisory Platform
+# BAYYAN AI | بيان — Jordanian Tax Assistant
 
 [![CI](https://github.com/MohammadKhairJaradat/BAYYAN-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/MohammadKhairJaradat/BAYYAN-AI/actions/workflows/ci.yml)
 [![Python 3.14](https://img.shields.io/badge/python-3.14.6-blue.svg)](https://www.python.org/)
@@ -224,3 +224,7 @@ npm run build
 - **Provenance & Attribution:** For details on project history, component attribution, and release candidate inventory, see [docs/provenance.md](docs/provenance.md).
 - **Educational Disclaimer:** This application is an educational prototype and demonstration. It does not file tax returns with the Income and Sales Tax Department (ISTD) and does not substitute for certified legal or financial advice.
 - **License:** Distributed under the **GNU General Public License v3.0 (GPL-3.0)**. See [LICENSE](LICENSE) for terms.
+
+## Contact
+
+[Email Mohammad Khair Jaradat](mailto:mohammad.sameer.jaradat@gmail.com) · [GitHub profile](https://github.com/MohammadKhairJaradat) · [CV](https://github.com/MohammadKhairJaradat/MohammadKhairJaradat/blob/main/Mohammad_Khair_Jaradat_CV.pdf)
