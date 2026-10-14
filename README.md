@@ -11,6 +11,23 @@
 
 **BAYYAN AI (بيان)** is a student graduation project that helps individual taxpayers in Jordan organize tax information, review documents, explore estimates, and receive optional AI-assisted explanations. Tax calculations are performed by deterministic Python code. The included legal knowledge is demo material, and the project does not file official returns or replace professional advice.
 
+## Project at a glance
+
+- **Purpose:** organize tax information, review uploaded documents, and explore tax estimates through an Arabic-first interface.
+- **Data and AI:** document retrieval with ChromaDB and multilingual embeddings; optional AI explanations and LangGraph advisory workflows.
+- **Calculation:** a separate Python `Decimal` engine computes estimates; language models handle language tasks.
+- **Application:** FastAPI and PostgreSQL backend with a React and TypeScript frontend.
+- **Scope:** an educational graduation project with demo legal fixtures; it does not submit official tax returns.
+
+[Portfolio](https://github.com/MohammadKhairJaradat) · [CV](https://github.com/MohammadKhairJaradat/blob/main/Mohammad_Khair_Jaradat_CV.pdf) · [Knowledge-base notes](backend/knowledge_base/README.md)
+
+<details>
+<summary><b>بالعربي — نبذة عن بيان</b></summary>
+
+بيان مشروع تخرج بواجهة عربية لتنظيم المعلومات والمستندات الضريبية واستعراض تقديرات الضريبة. يجمع بين البحث في المستندات، والشروحات المدعومة بالذكاء الاصطناعي، ومحرك حسابات Python منفصل. المواد القانونية المرفقة تجريبية، والمشروع لا يقدّم إقرارات رسمية.
+
+</details>
+
 ---
 
 ## 🏛️ Architecture: Deterministic Calculation vs. Language Models
