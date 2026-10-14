@@ -19,7 +19,7 @@
 - **Application:** FastAPI and PostgreSQL backend with a React and TypeScript frontend.
 - **Scope:** an educational graduation project with demo legal fixtures; it does not submit official tax returns.
 
-[Portfolio](https://github.com/MohammadKhairJaradat) · [CV](https://github.com/MohammadKhairJaradat/blob/main/Mohammad_Khair_Jaradat_CV.pdf) · [Knowledge-base notes](backend/knowledge_base/README.md)
+[Portfolio](https://github.com/MohammadKhairJaradat) · [CV](https://github.com/MohammadKhairJaradat/MohammadKhairJaradat/blob/main/Mohammad_Khair_Jaradat_CV.pdf) · [Knowledge-base notes](backend/knowledge_base/README.md)
 
 <details>
 <summary><b>بالعربي — نبذة عن بيان</b></summary>
