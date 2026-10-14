@@ -43,6 +43,36 @@ def test_google_sdk_call_has_timeout_and_closes_client(monkeypatch):
     assert calls[1] == "closed"
 
 
+@pytest.mark.parametrize("model,max_tokens,mime_type,expected_budget", [
+    ("gemini-2.5-flash", 32, None, 0),
+    ("gemini-2.5-flash", 1024, None, None),
+    ("gemini-2.5-flash", 2048, "application/json", 0),
+    ("gemini-2.5-pro", 32, None, None),
+    ("gemini-3.1-flash-lite", 32, None, None),
+])
+def test_bounded_flash_responses_reserve_the_output_budget(monkeypatch, model, max_tokens, mime_type, expected_budget):
+    configs = []
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.models = SimpleNamespace(generate_content=self.generate_content)
+
+        def generate_content(self, **kwargs):
+            configs.append(kwargs["config"])
+            return SimpleNamespace(text="Organize Tax Documents")
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(google.genai, "Client", FakeClient)
+    assert google.generate(
+        api_key="test-key", model=model, prompt="Name this chat",
+        max_output_tokens=max_tokens, response_mime_type=mime_type,
+    ) == "Organize Tax Documents"
+    thinking = configs[0].thinking_config
+    assert (thinking.thinking_budget if thinking is not None else None) == expected_budget
+
+
 def test_openai_adapter_success_and_no_sdk_retry(monkeypatch):
     monkeypatch.setattr(settings, "OPENAI_API_KEY", "test-key")
     calls = []

@@ -202,6 +202,8 @@ npm run dev
 
 BAYYAN AI includes automated test suites covering calculation logic, API endpoints, schema migrations, and frontend components:
 
+Validation on **14 October 2026** recorded **262 passing backend tests**, **67 passing frontend tests**, and **42 passing calculation-focused tests** within the backend total. Five PostgreSQL integration checks were included. Two checks requiring untracked local evaluation material were skipped. Seven Gemini smoke scenarios also succeeded on rerun. See the [validation notes](docs/validation-2026-10-14.md) for scope, setup, and limitations.
+
 ```bash
 # Backend test suite (pytest)
 cd backend

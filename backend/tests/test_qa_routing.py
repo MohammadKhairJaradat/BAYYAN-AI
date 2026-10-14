@@ -59,6 +59,41 @@ def test_direct_chat_bypasses_rag(monkeypatch, fake_llm):
     assert fake_llm[0]["system_prompt"] == qa.DIRECT_CHAT_PROMPT
 
 
+def test_calculation_survives_unavailable_optional_retrieval(monkeypatch):
+    from app.tax_engine import TaxInput
+
+    def unavailable(*args, **kwargs):
+        raise RuntimeError("The local vector index is unavailable")
+
+    def forbidden_llm(*args, **kwargs):
+        raise AssertionError("A valid tax calculation must not fall back to an LLM")
+
+    monkeypatch.setattr(qa, "retrieve_with_context", unavailable)
+    monkeypatch.setattr(qa, "_call_llm", forbidden_llm)
+    result = qa.answer(
+        "Calculate my tax", provider=PROVIDER, model=MODEL,
+        tax_inputs=TaxInput(gross_income=30_000),
+    )
+
+    assert result["provider"] == "tax_engine"
+    assert result["tax_breakdown"]["tax_liability"] == 2750
+    assert result["sources"] == []
+
+
+def test_calculation_does_not_present_demo_citations_as_official_law(monkeypatch):
+    from app.tax_engine import TaxInput
+
+    source = _chunk(citation="BAYYAN test fixture - مصدر تجريبي")
+    monkeypatch.setattr(qa, "retrieve_with_context", lambda *a, **kw: ([source], source.text))
+    result = qa.answer(
+        "احسب ضريبتي", tax_inputs=TaxInput(gross_income=30_000), provider=PROVIDER,
+    )
+
+    assert result["provider"] == "tax_engine"
+    assert "مصدر تجريبي" in result["answer"]
+    assert "المستند القانوني (قانون ضريبة الدخل رقم 34 لسنة 2014)" not in result["answer"]
+
+
 @pytest.mark.parametrize(
     "question",
     [

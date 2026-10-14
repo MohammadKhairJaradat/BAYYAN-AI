@@ -15,7 +15,7 @@ from app.models.database import Deduction, Document, TaxProfile, User
 
 
 @pytest.mark.asyncio
-async def test_postgres_concurrent_processing_has_one_deduction(monkeypatch):
+async def test_postgres_processing_awaits_confirmation_and_preserves_one_link(monkeypatch):
     url = os.environ.get("S03_POSTGRES_URL")
     if not url:
         pytest.skip("Set S03_POSTGRES_URL to an isolated migrated PostgreSQL database")
@@ -52,7 +52,22 @@ async def test_postgres_concurrent_processing_has_one_deduction(monkeypatch):
                 )
 
         first, second = await asyncio.gather(process(), process())
-        assert first.deduction_id == second.deduction_id
+        assert first.deduction_id is second.deduction_id is None
+        assert first.extracted_data["awaiting_confirmation"] is True
+        assert second.extracted_data["awaiting_confirmation"] is True
+        async with sessions() as db:
+            count = await db.scalar(select(func.count()).select_from(Deduction).where(Deduction.document_id == doc_id))
+            assert count == 0
+            # Processing only proposes values. Simulate the separate, explicit
+            # confirmation before checking retry preservation and uniqueness.
+            confirmed = Deduction(tax_profile_id=profile_id, category="medical", amount=100, document_id=doc_id)
+            db.add(confirmed)
+            await db.commit()
+            confirmed_id = confirmed.id
+
+        retry = await process()
+        assert retry.deduction_id == confirmed_id
+        assert retry.extracted_data["awaiting_confirmation"] is False
         async with sessions() as db:
             count = await db.scalar(select(func.count()).select_from(Deduction).where(Deduction.document_id == doc_id))
             assert count == 1

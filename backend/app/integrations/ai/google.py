@@ -37,6 +37,14 @@ def generate(
         temperature=temperature,
         response_mime_type=response_mime_type,
         response_schema=response_schema,
+        # Flash 2.5 shares its output budget with thinking. Reserve visible
+        # tokens for short titles and bounded structured JSON responses.
+        thinking_config=(
+            types.ThinkingConfig(thinking_budget=0)
+            if model.startswith("gemini-2.5-flash")
+            and (max_output_tokens <= 128 or response_mime_type == "application/json")
+            else None
+        ),
     )
     client = genai.Client(
         api_key=api_key,

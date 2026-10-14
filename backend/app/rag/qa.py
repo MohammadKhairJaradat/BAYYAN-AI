@@ -565,7 +565,13 @@ def answer(
 
             # أضف مرجع قانوني محدد — نبحث عن مواد الإعفاءات والشرائح
             legal_query = "الإعفاء الشخصي وإعفاء الأسرة والمعالين وشرائح ضريبة الدخل المادة 6 المادة 8"
-            legal_chunks, _ = retrieve_with_context(legal_query, top_k=3, source_type="law", lang=lang)
+            # Citations enrich an already computed result. An unavailable index
+            # must not discard it or route the numeric answer to a language model.
+            try:
+                legal_chunks, _ = retrieve_with_context(legal_query, top_k=3, source_type="law", lang=lang)
+            except Exception:
+                logger.warning("Optional calculation citations are unavailable", exc_info=True)
+                legal_chunks = []
 
             # فلتر: فقط الـ chunks ذات صلة عالية وتحتوي على نص عربي صحيح
             relevant = [
@@ -575,7 +581,7 @@ def answer(
             ]
 
             if relevant:
-                ref_lines = ["---", "**المستند القانوني (قانون ضريبة الدخل رقم 34 لسنة 2014):**"]
+                ref_lines = ["---", "**المصادر المرتبطة:**"]
                 for c in relevant:
                     ref_lines.append(f"- {c.citation}")
                 answer_text += "\n\n" + "\n".join(ref_lines)
