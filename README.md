@@ -19,7 +19,7 @@
 - **Application:** FastAPI and PostgreSQL backend with a React and TypeScript frontend.
 - **Scope:** an educational graduation project with demo legal fixtures; it does not submit official tax returns.
 
-[Portfolio](https://github.com/MohammadKhairJaradat) · [CV](https://github.com/MohammadKhairJaradat/MohammadKhairJaradat/blob/main/Mohammad_Khair_Jaradat_CV.pdf) · [Knowledge-base notes](backend/knowledge_base/README.md)
+[Portfolio](https://github.com/MohammadKhairJaradat) · [CV](https://github.com/MohammadKhairJaradat/MohammadKhairJaradat/blob/main/Mohammad_Khair_Jaradat_CV.pdf) · [Data pipeline architecture](docs/data_pipeline.md) · [Knowledge-base notes](backend/knowledge_base/README.md)
 
 <details>
 <summary><b>بالعربي — نبذة عن بيان</b></summary>
@@ -72,6 +72,13 @@ A core design principle of BAYYAN AI is the clear separation between numerical c
 - **Understanding & Intent Tracking:** Identifies taxpayer context (residency, dependents, deduction categories) to formulate relevant inquiries and guidance.
 - **Offline Validation:** Includes offline evaluation harnesses verifying lexical overlap and source isolation without requiring live API calls.
 - **Demo Legal Material:** The bundled legal fixtures serve as functional prototypes and test cases; they do not represent an official legal gazette corpus.
+
+### Data Engineering & Ingestion Pipeline (`backend/scripts/`, `backend/app/extraction/`, `backend/app/rag/`)
+See the full pipeline documentation and diagrams in **[docs/data_pipeline.md](docs/data_pipeline.md)**:
+- **Manifest-Gated Legal Ingestion & Content-Hash Deduplication:** `scripts/ingest_knowledge_base.py` reads sources declared in `knowledge_base/manifest.json`, extracts text (with `pdfplumber` and 200-DPI `pytesseract` Arabic/English OCR fallback for scanned PDF pages), chunks by Arabic legal structure (`الفصل` / `المادة` / clause), validates chunk metadata (`validate_chunk`), and performs idempotent SHA-256 content-hash upserts into ChromaDB (`tax_law_jordan_v2_<digest>`). Unchanged sources are skipped (`0` writes), while updated revisions soft-retire older chunks (`active: False`) for reversible rollback.
+- **Hybrid Retrieval (60/40 Dense + BM25 Fusion):** Queries filter to active `demo`/`reviewed` sources (preventing unreviewed staging material from entering answer evidence) and combine 1024-dimensional `intfloat/multilingual-e5-large` cosine similarity (60%) with `BM25Okapi` lexical scoring (40%).
+- **Two-Tier Vision Invoice Extraction & Validation:** `app/extraction/` orchestrates `GeminiExtractor` (`gemini-2.5-flash`) with automatic escalation to `ClaudeExtractor` (`claude-sonnet-4-20250514`) when confidence falls below `0.65`, followed by JSON sanitization and field validation (`validate_extraction_fields`: non-negative finite amounts, valid invoice dates in `1990..current_year+1`, category/type enums, and confidence bounds).
+- **Transactional Write Boundaries & Relational Consistency:** PostgreSQL 17 (managed across 22 Alembic migrations) enforces magic-byte file checks, idempotent quota reservations (`uq_usage_reservation_key`), row-locked document processing (`SELECT ... FOR UPDATE`), 1-to-1 receipt-to-deduction constraints (`uq_deductions_document_id`), fixed-point 3-decimal fils arithmetic (`Numeric(15, 3)`), and immutable `calculation_runs` audit snapshots.
 
 ---
 
