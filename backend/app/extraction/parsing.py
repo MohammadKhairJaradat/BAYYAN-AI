@@ -1,15 +1,23 @@
 """
-Robust JSON parsing for model-generated extraction output.
+Robust JSON parsing and field validation for model-generated extraction output.
 """
 
 from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 import re
 from typing import Any
 
 from .base import DeductionCategory, DocumentType, ExtractionResult
+
+MIN_INVOICE_YEAR = 1990
+
+
+def _is_valid_invoice_date(value: dt.date) -> bool:
+    max_year = dt.date.today().year + 1
+    return MIN_INVOICE_YEAR <= value.year <= max_year
 
 
 def parse_model_output(raw_output: str, backend: str) -> ExtractionResult:
@@ -53,17 +61,24 @@ def extraction_result_from_mapping(data: dict[str, Any], backend: str) -> Extrac
     raw_date = data.get("date")
     if raw_date:
         try:
-            date_val = dt.date.fromisoformat(str(raw_date))
+            parsed_date = dt.date.fromisoformat(str(raw_date).strip())
+            if _is_valid_invoice_date(parsed_date):
+                date_val = parsed_date
         except ValueError:
             pass
 
     amount = None
     raw_amount = data.get("amount")
-    if raw_amount is not None:
+    if raw_amount is not None and not isinstance(raw_amount, bool):
         try:
-            amount = float(raw_amount)
+            parsed_amount = float(raw_amount)
+            if math.isfinite(parsed_amount) and parsed_amount >= 0:
+                amount = parsed_amount
         except (TypeError, ValueError):
             pass
+
+    raw_vendor = data.get("vendor")
+    vendor = raw_vendor.strip() if isinstance(raw_vendor, str) and raw_vendor.strip() else None
 
     try:
         category = DeductionCategory(data.get("category", "unknown"))
@@ -77,6 +92,8 @@ def extraction_result_from_mapping(data: dict[str, Any], backend: str) -> Extrac
 
     try:
         confidence = float(data.get("confidence", 0.5))
+        if not math.isfinite(confidence):
+            confidence = 0.0
     except (TypeError, ValueError):
         confidence = 0.0
     confidence = max(0.0, min(1.0, confidence))
@@ -86,7 +103,7 @@ def extraction_result_from_mapping(data: dict[str, Any], backend: str) -> Extrac
         extras = {}
 
     return ExtractionResult(
-        vendor=data.get("vendor"),
+        vendor=vendor,
         amount=amount,
         date=date_val,
         category=category,
@@ -96,3 +113,26 @@ def extraction_result_from_mapping(data: dict[str, Any], backend: str) -> Extrac
         extras=extras,
         extractor_backend=backend,
     )
+
+
+def validate_extraction_fields(result: ExtractionResult) -> list[str]:
+    """Run light validation checks on extracted invoice/receipt fields.
+
+    Returns a list of failed check identifiers (empty list when all checks pass).
+    """
+    issues: list[str] = []
+    if result.error is not None:
+        issues.append("extractor_error")
+    if result.amount is None or not math.isfinite(result.amount) or result.amount <= 0:
+        issues.append("missing_or_non_positive_amount")
+    if result.category == DeductionCategory.UNKNOWN:
+        issues.append("unknown_category")
+    if result.document_type == DocumentType.UNKNOWN:
+        issues.append("unknown_document_type")
+    if not result.vendor or not str(result.vendor).strip():
+        issues.append("missing_vendor")
+    if result.date is None or not _is_valid_invoice_date(result.date):
+        issues.append("missing_or_out_of_range_date")
+    if not math.isfinite(result.confidence) or result.confidence < 0.4:
+        issues.append("low_confidence")
+    return issues

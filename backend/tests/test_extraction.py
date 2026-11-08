@@ -11,7 +11,11 @@ from app.extraction.base import (
     ExtractionResult,
 )
 from app.extraction.gemini_extractor import GeminiExtractor
-from app.extraction.parsing import parse_model_output
+from app.extraction.parsing import (
+    extraction_result_from_mapping,
+    parse_model_output,
+    validate_extraction_fields,
+)
 
 
 class FakeExtractor(BaseExtractor):
@@ -205,3 +209,43 @@ def test_parser_handles_trailing_comma_json():
     assert result.error is None
     assert result.vendor == "Clinic"
     assert result.category == DeductionCategory.MEDICAL
+
+
+def test_extraction_field_validation_and_sanitization():
+    valid = extraction_result_from_mapping(
+        {
+            "vendor": "  Al-Essra Hospital  ",
+            "amount": 125.5,
+            "date": "2026-04-10",
+            "category": "medical",
+            "document_type": "receipt",
+            "confidence": 0.91,
+        },
+        backend="test-backend",
+    )
+    assert valid.vendor == "Al-Essra Hospital"
+    assert valid.amount == 125.5
+    assert valid.date == dt.date(2026, 4, 10)
+    assert validate_extraction_fields(valid) == []
+
+    invalid = extraction_result_from_mapping(
+        {
+            "vendor": "   ",
+            "amount": -45.0,
+            "date": "1850-01-01",
+            "category": "not_a_category",
+            "document_type": "unknown",
+            "confidence": 0.25,
+        },
+        backend="test-backend",
+    )
+    assert invalid.vendor is None
+    assert invalid.amount is None
+    assert invalid.date is None
+    issues = validate_extraction_fields(invalid)
+    assert "missing_or_non_positive_amount" in issues
+    assert "unknown_category" in issues
+    assert "unknown_document_type" in issues
+    assert "missing_vendor" in issues
+    assert "missing_or_out_of_range_date" in issues
+    assert "low_confidence" in issues

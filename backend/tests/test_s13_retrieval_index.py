@@ -6,7 +6,7 @@ import uuid
 import chromadb
 import pytest
 
-from app.rag.chunker import LegalChunk, SourceType
+from app.rag.chunker import LegalChunk, SourceType, validate_chunk
 from app.rag.vector_store import VectorStore
 from scripts import ingest_knowledge_base
 
@@ -118,3 +118,48 @@ def test_pdf_page_and_commentary_provenance(tmp_path, monkeypatch):
         commentary, SourceType.EXPERT_COMMENTARY, "guidance", None, tmp_path,
     )
     assert notes and all(item.source_type == SourceType.EXPERT_COMMENTARY for item in notes)
+
+
+def test_chunk_validation_and_idempotent_ingestion_report():
+    valid = LegalChunk(
+        text="المادة 9 تنص على إعفاء شخصي سنوي للمكلف المقيم في المملكة الأردنية الهاشمية لأغراض الاختبار فقط.",
+        text_ar="المادة 9",
+        source_file="law/demo.md",
+        source_type=SourceType.LAW,
+        law_year=2026,
+        effective_date="2026-01-01",
+        page_number=1,
+    )
+    assert validate_chunk(valid) == []
+
+    bad = LegalChunk(
+        text="قصير",
+        text_ar="قصير",
+        source_file="",
+        source_type=SourceType.LAW,
+        law_year=1800,
+        effective_date="not-a-date",
+        page_number=0,
+    )
+    issues = validate_chunk(bad)
+    assert "missing_source_file" in issues
+    assert "empty_or_short_text" in issues
+    assert "invalid_law_year" in issues
+    assert "invalid_effective_date" in issues
+    assert "invalid_page_number" in issues
+
+    client = chromadb.EphemeralClient()
+    store = VectorStore(embedder=FakeEmbedder(f"test/e5-{uuid.uuid4().hex}"), client=client)
+    first_report = ingest_knowledge_base.run_ingestion(store=store)
+    assert first_report["manifest_sources_total"] == 2
+    assert first_report["files_processed"] == 2
+    assert first_report["files_upserted"] == 2
+    assert first_report["files_skipped_unchanged"] == 0
+    assert first_report["chunks_valid"] == first_report["chunks_upserted"] > 0
+
+    second_report = ingest_knowledge_base.run_ingestion(store=store)
+    assert second_report["files_processed"] == 2
+    assert second_report["files_upserted"] == 0
+    assert second_report["files_skipped_unchanged"] == 2
+    assert second_report["chunks_upserted"] == 0
+    assert second_report["collection_total_chunks"] == first_report["collection_total_chunks"]

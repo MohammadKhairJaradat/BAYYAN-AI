@@ -3,7 +3,7 @@
 ingest_knowledge_base.py — One-time (or on-update) ingestion script.
 
 Reads sources listed in the knowledge-base manifest, chunks them using
-legal-structure-aware chunking, and upserts one revision at a time.
+legal-structure-aware chunking, validates chunks, and upserts one revision at a time.
 
 Supports:
     - .txt / .md  — read directly
@@ -33,7 +33,13 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from app.rag.chunker import SourceType, chunk_guidance_document, chunk_legal_document
+from app.rag.chunker import (
+    LegalChunk,
+    SourceType,
+    chunk_guidance_document,
+    chunk_legal_document,
+    validate_chunk,
+)
 from app.rag.vector_store import VectorStore
 
 logging.basicConfig(
@@ -226,34 +232,78 @@ def ingest_file(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Main
+# Validation & pipeline runner
 # ─────────────────────────────────────────────────────────────────────────────
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Ingest knowledge base into ChromaDB")
-    parser.add_argument(
-        "--dir",
-        type=Path,
-        default=KNOWLEDGE_BASE_DIR,
-        help="Path to knowledge_base directory",
-    )
-    args = parser.parse_args()
+def _filter_and_deduplicate_chunks(
+    chunks: list[LegalChunk],
+) -> tuple[list[LegalChunk], int, int]:
+    """Validate chunks and deduplicate exact duplicate text within the same source.
 
-    kb_dir: Path = args.dir
+    Returns (valid_unique_chunks, rejected_validation_count, duplicate_count).
+    """
+    valid_unique: list[LegalChunk] = []
+    seen_texts: set[str] = set()
+    rejected = 0
+    duplicates = 0
+
+    for chunk in chunks:
+        issues = validate_chunk(chunk)
+        if issues:
+            rejected += 1
+            logger.warning(
+                "  Dropping invalid chunk from %s (%s): %s",
+                chunk.source_file,
+                chunk.citation,
+                ", ".join(issues),
+            )
+            continue
+        norm_text = chunk.text.strip()
+        if norm_text in seen_texts:
+            duplicates += 1
+            logger.debug(
+                "  Deduplicating repeated chunk in %s (%s)",
+                chunk.source_file,
+                chunk.citation,
+            )
+            continue
+        seen_texts.add(norm_text)
+        valid_unique.append(chunk)
+
+    return valid_unique, rejected, duplicates
+
+
+def run_ingestion(
+    kb_dir: Path = KNOWLEDGE_BASE_DIR,
+    store: VectorStore | None = None,
+) -> dict:
+    """Ingest all manifest-listed sources with validation and content-hash deduplication.
+
+    Returns a structured ingestion summary dictionary.
+    """
     if not kb_dir.exists():
-        logger.error("Knowledge base directory not found: %s", kb_dir)
-        sys.exit(1)
+        raise FileNotFoundError(f"Knowledge base directory not found: {kb_dir}")
 
     manifest_path = kb_dir / "manifest.json"
     if not manifest_path.is_file():
-        logger.error("Knowledge-base manifest not found: %s", manifest_path)
-        sys.exit(1)
+        raise FileNotFoundError(f"Knowledge-base manifest not found: {manifest_path}")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest.get("schema_version") != 1 or not isinstance(manifest.get("sources"), list):
         raise ValueError("Unsupported knowledge-base manifest")
-    store = VectorStore()
-    total_chunks = 0
-    total_files = 0
+
+    if store is None:
+        store = VectorStore()
+
+    total_chunks_generated = 0
+    total_chunks_valid = 0
+    total_chunks_rejected = 0
+    total_chunks_dedup = 0
+    total_chunks_upserted = 0
+    files_processed = 0
+    files_upserted = 0
+    files_skipped_unchanged = 0
+    source_reports: list[dict] = []
+
     seen_files: set[str] = set()
     for entry in manifest["sources"]:
         relative = entry["file"]
@@ -270,30 +320,127 @@ def main() -> None:
             raise ValueError(f"Source type disagrees with folder: {relative}")
         if entry["status"] not in {"demo", "unreviewed", "reviewed"}:
             raise ValueError(f"Invalid review status: {relative}")
-        chunks = ingest_file(
+
+        raw_chunks = ingest_file(
             fpath, source_type, chunker_type, entry.get("law_year"), kb_dir,
             entry.get("effective_date"),
         )
+        total_chunks_generated += len(raw_chunks)
+        chunks, rejected_count, dedup_count = _filter_and_deduplicate_chunks(raw_chunks)
+        total_chunks_valid += len(chunks)
+        total_chunks_rejected += rejected_count
+        total_chunks_dedup += dedup_count
+
         if not chunks:
-            logger.warning("No chunks produced; leaving prior index revision intact: %s", relative)
+            logger.warning("No valid chunks produced; leaving prior index revision intact: %s", relative)
+            source_reports.append({
+                "file": relative,
+                "type": source_type.value,
+                "status": entry["status"],
+                "source_hash": None,
+                "chunks_generated": len(raw_chunks),
+                "chunks_valid": 0,
+                "chunks_upserted": 0,
+                "action": "empty",
+            })
             continue
+
         content = fpath.read_bytes() + "\n".join(chunk.text for chunk in chunks).encode()
         source_hash = hashlib.sha256(content).hexdigest()
-        total_chunks += store.upsert_source(
+        upserted = store.upsert_source(
             chunks, source_hash=source_hash, source_title=entry["title"],
             source_status=entry["status"], source_url=entry.get("source_url", ""),
         )
-        total_files += 1
+        files_processed += 1
+        total_chunks_upserted += upserted
+        if upserted > 0:
+            files_upserted += 1
+            action = "upserted"
+        else:
+            files_skipped_unchanged += 1
+            action = "skipped_unchanged"
+            logger.info("  Skipped unchanged source (hash %s...): %s", source_hash[:12], relative)
+
+        source_reports.append({
+            "file": relative,
+            "type": source_type.value,
+            "status": entry["status"],
+            "source_hash": source_hash,
+            "chunks_generated": len(raw_chunks),
+            "chunks_valid": len(chunks),
+            "chunks_rejected_validation": rejected_count,
+            "chunks_deduplicated": dedup_count,
+            "chunks_upserted": upserted,
+            "action": action,
+        })
+
+    report = {
+        "manifest_sources_total": len(manifest["sources"]),
+        "files_processed": files_processed,
+        "files_upserted": files_upserted,
+        "files_skipped_unchanged": files_skipped_unchanged,
+        "chunks_generated": total_chunks_generated,
+        "chunks_valid": total_chunks_valid,
+        "chunks_rejected_validation": total_chunks_rejected,
+        "chunks_deduplicated_within_source": total_chunks_dedup,
+        "chunks_upserted": total_chunks_upserted,
+        "collection_name": store.collection_name,
+        "collection_total_chunks": store.count(),
+        "sources": source_reports,
+    }
 
     logger.info(
         "\n✓ Ingestion complete.\n"
-        "   Files processed : %d\n"
-        "   Chunks upserted : %d\n"
-        "   Collection total: %d",
-        total_files,
-        total_chunks,
+        "   Files processed          : %d (upserted: %d, skipped unchanged: %d)\n"
+        "   Chunks generated / valid : %d / %d (rejected: %d, deduped: %d)\n"
+        "   Chunks upserted          : %d\n"
+        "   Collection total         : %d",
+        files_processed,
+        files_upserted,
+        files_skipped_unchanged,
+        total_chunks_generated,
+        total_chunks_valid,
+        total_chunks_rejected,
+        total_chunks_dedup,
+        total_chunks_upserted,
         store.count(),
     )
+    return report
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Main
+# ─────────────────────────────────────────────────────────────────────────────
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Ingest knowledge base into ChromaDB")
+    parser.add_argument(
+        "--dir",
+        type=Path,
+        default=KNOWLEDGE_BASE_DIR,
+        help="Path to knowledge_base directory",
+    )
+    parser.add_argument(
+        "--report-json",
+        type=Path,
+        default=None,
+        help="Optional path to write JSON ingestion report",
+    )
+    args = parser.parse_args()
+
+    try:
+        report = run_ingestion(kb_dir=args.dir)
+    except FileNotFoundError as exc:
+        logger.error("%s", exc)
+        sys.exit(1)
+
+    if args.report_json is not None:
+        args.report_json.parent.mkdir(parents=True, exist_ok=True)
+        args.report_json.write_text(
+            json.dumps(report, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        logger.info("Saved ingestion report to %s", args.report_json)
 
 
 if __name__ == "__main__":

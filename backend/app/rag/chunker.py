@@ -7,6 +7,7 @@ Each chunk carries full metadata so retrieval can surface precise legal citation
 
 from __future__ import annotations
 
+import datetime as dt
 import re
 from dataclasses import dataclass, field
 from enum import Enum
@@ -232,3 +233,40 @@ def chunk_guidance_document(
         )
 
     return [c for c in chunks if len(c.text) >= MIN_CHARS]
+
+
+def validate_chunk(chunk: LegalChunk, min_chars: int = 80) -> list[str]:
+    """Run light data-quality checks on a chunk before vector indexing.
+
+    Returns a list of failed check codes (empty list when valid).
+    """
+    issues: list[str] = []
+    if not isinstance(chunk.source_file, str) or not chunk.source_file.strip():
+        issues.append("missing_source_file")
+    if not isinstance(chunk.text, str) or len(chunk.text.strip()) < min_chars:
+        issues.append("empty_or_short_text")
+    if not isinstance(chunk.source_type, SourceType):
+        issues.append("invalid_source_type")
+    if chunk.law_year is not None:
+        if (
+            isinstance(chunk.law_year, bool)
+            or not isinstance(chunk.law_year, int)
+            or not (1900 <= chunk.law_year <= 2100)
+        ):
+            issues.append("invalid_law_year")
+    if chunk.effective_date is not None:
+        if not isinstance(chunk.effective_date, str):
+            issues.append("invalid_effective_date")
+        else:
+            try:
+                dt.date.fromisoformat(chunk.effective_date)
+            except ValueError:
+                issues.append("invalid_effective_date")
+    if chunk.page_number is not None:
+        if (
+            isinstance(chunk.page_number, bool)
+            or not isinstance(chunk.page_number, int)
+            or chunk.page_number < 1
+        ):
+            issues.append("invalid_page_number")
+    return issues
